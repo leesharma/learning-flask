@@ -1,8 +1,8 @@
 import os
 from flask import Flask, render_template, request, session, redirect, url_for
-from models import db, User
+from models import db, User, Place
 
-from forms import SignupForm, LoginForm
+from forms import SignupForm, LoginForm, AddressForm
 
 app = Flask(__name__)
 
@@ -67,12 +67,32 @@ def logout():
     session.pop('email', None)
     return redirect(url_for('index'))
 
-@app.route('/home')
+@app.route('/home', methods=['GET', 'POST'])
 def home():
     if 'email' not in session:
         return redirect(url_for('login'))
 
-    return render_template('home.html')
+    form = AddressForm()
+
+    places = []
+    my_coordinates = (42.650435, -73.758516)
+
+    if request.method == 'POST' and form.validate():
+        # get the address
+        address = form.address.data
+
+        # query for places around it
+        p = Place()
+        my_coordinates = p.address_to_latlng(address)
+        places = p.query(address)
+
+        # return the results
+        return render_template('home.html', form=form,
+                                            my_coordinates=my_coordinates,
+                                            places=places)
+    return render_template('home.html', form=form,
+                                        my_coordinates=my_coordinates,
+                                        places=places)
 
 
 ## INIT ##
