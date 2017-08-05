@@ -13,6 +13,9 @@ db.init_app(app)
 
 app.secret_key = os.environ.get('SECRET_KEY')
 
+
+## ROUTES ##
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -23,6 +26,9 @@ def about():
 
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
+    if 'email' in session:
+        return redirect(url_for('home'))
+
     form = SignupForm()
 
     if request.method == 'POST' and form.validate():
@@ -39,6 +45,9 @@ def signup():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    if 'email' in session:
+        return redirect(url_for('home'))
+
     form = LoginForm()
 
     if request.method == 'POST' and form.validate():
@@ -60,7 +69,13 @@ def logout():
 
 @app.route('/home')
 def home():
+    if 'email' not in session:
+        return redirect(url_for('login'))
+
     return render_template('home.html')
+
+
+## INIT ##
 
 if __name__ == '__main__':
     app.run(debug=True)
